@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Library - Bookstore{% endblock %}
+
+{% block content %}
+<div class="dashboard-hero" style="text-align: center; margin-block: var(--space-md) var(--space-sm);">
+  <h1 style="font-size: var(--step-3); font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; color: var(--color-text);">
+    Discover Your Next Read
+  </h1>
+  <p style="font-size: var(--step-0); color: var(--color-text-secondary); margin-top: 6px; max-width: 540px; margin-inline: auto;">
+    Explore our curated collection of literature, scientific breakthroughs, and historical chronicles.
+  </p>
+</div>
+
+<!-- Spotlight Search Bar -->
+<div class="spotlight-search-container">
+  <form method="GET" action="{{ url_for('main.dashboard') }}" class="spotlight-search-form" id="spotlight-form" role="search">
+    <svg class="spotlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+
+    <input id="spotlight-search-input" class="spotlight-search-input" type="search" 
+           placeholder="Search books, authors, categories..." 
+           name="search" 
+           value="{{ request.args.get('search', '') }}" 
+           autocomplete="off" 
+           aria-label="Search books">
+
+    <button type="button" id="spotlight-clear-btn" class="spotlight-clear-btn" aria-label="Clear Search" title="Clear">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <span class="spotlight-shortcut" title="Press ⌘K or Ctrl+K to search"><h5>Ctrl</h5><strong>K</strong></span>
+
+    <button type="submit" class="spotlight-submit-btn">Search</button>
+
+    {% if request.args.get('category') %}
+    <input type="hidden" name="category" value="{{ request.args.get('category') }}">
+    {% endif %}
+  </form>
+
+  {% if request.args.get('search') %}
+  <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: 0.8125rem; color: var(--color-text-secondary);">
+    <span>Showing results for "<strong>{{ request.args.get('search') }}</strong>"</span>
+    <a href="{{ url_for('main.dashboard', category=request.args.get('category')) if request.args.get('category') else url_for('main.dashboard') }}" 
+       style="color: var(--color-accent); font-weight: 600; text-decoration: underline;">Clear search</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Segmented Category Control -->
+<div class="segmented-control-wrapper">
+  <nav class="segmented-control" role="tablist" aria-label="Book Categories">
+    <a href="{{ url_for('main.dashboard', search=request.args.get('search')) if request.args.get('search') else url_for('main.dashboard') }}" 
+       class="segment-item {% if not request.args.get('category') or request.args.get('category') == 'All' %}active{% endif %}"
+       role="tab">
+      All Books
+    </a>
+    <a href="{{ url_for('main.dashboard', category='Science', search=request.args.get('search')) if request.args.get('search') else url_for('main.dashboard', category='Science') }}" 
+       class="segment-item {% if request.args.get('category') == 'Science' %}active{% endif %}"
+       role="tab">
+      Science
+    </a>
+    <a href="{{ url_for('main.dashboard', category='History', search=request.args.get('search')) if request.args.get('search') else url_for('main.dashboard', category='History') }}" 
+       class="segment-item {% if request.args.get('category') == 'History' %}active{% endif %}"
+       role="tab">
+      History
+    </a>
+    <a href="{{ url_for('main.dashboard', category='Novel', search=request.args.get('search')) if request.args.get('search') else url_for('main.dashboard', category='Novel') }}" 
+       class="segment-item {% if request.args.get('category') == 'Novel' %}active{% endif %}"
+       role="tab">
+      Novels & Fiction
+    </a>
+  </nav>
+</div>
+
+<!-- Responsive Books Grid with Container Queries -->
+<div class="books-grid">
+  {% for book in books %}
+  <div class="book-card-container" 
+       data-title="{{ book.title }}" 
+       data-author="{{ book.author }}" 
+       data-category="{{ book.category }}">
+    <article class="book-card">
+      <div class="book-card__cover" data-category="{{ book.category }}">
+        <!-- Subtle Background Motif -->
+        <svg class="book-card__cover-bg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+
+        <span class="book-card__cover-badge">
+          {% if book.category == 'Science' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31L4.62 18.24A2 2 0 0 0 6.32 21h11.36a2 2 0 0 0 1.7-2.76L14 9.31V2"></path></svg>
+          {% elif book.category == 'History' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          {% else %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          {% endif %}
+          {{ book.category }}
+        </span>
+      </div>
+
+      <div class="book-card__body">
+        <h2 class="book-card__title">{{ book.title }}</h2>
+        <p class="book-card__author">by {{ book.author }}</p>
+
+        <div class="book-card__meta">
+          <span class="book-card__price">${{ "%.2f"|format(book.price) }}</span>
+
+          {% if book.stock > 3 %}
+          <span class="stock-indicator stock-indicator--available" title="{{ book.stock }} copies in stock">
+            <span class="stock-indicator__dot"></span>
+            <span>{{ book.stock }} in stock</span>
+          </span>
+          {% elif book.stock > 0 %}
+          <span class="stock-indicator stock-indicator--low" title="Hurry, low stock">
+            <span class="stock-indicator__dot"></span>
+            <span>Only {{ book.stock }} left</span>
+          </span>
+          {% else %}
+          <span class="stock-indicator stock-indicator--out">
+            <span class="stock-indicator__dot"></span>
+            <span>Out of stock</span>
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="book-card__footer">
+        {% if book.stock > 0 %}
+        <a href="{{ url_for('main.add_to_cart', book_id=book.id) }}" 
+           class="btn btn-primary btn-block" 
+           aria-label="Add {{ book.title }} to Bag"
+           onclick="window.showToast && window.showToast('Added to bag');">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <span>Add to Bag</span>
+        </a>
+        {% else %}
+        <button class="btn btn-secondary btn-block" disabled aria-disabled="true">
+          <span>Unavailable</span>
+        </button>
+        {% endif %}
+      </div>
+    </article>
+  </div>
+  {% else %}
+  <div class="empty-state" style="grid-column: 1 / -1;">
+    <div class="empty-state__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+    </div>
+    <h3 class="empty-state__title">No Books Found</h3>
+    <p class="empty-state__text">We couldn't find any books matching your current filters.</p>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary" style="margin-top: 8px;">
+      View All Books
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
